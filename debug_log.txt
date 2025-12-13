@@ -1,0 +1,22 @@
+IDX | HEADER                           | DATA sample
+----|----------------------------------|-----------------------------------
+0   | Fecha                            | 22/09/2025                         
+1   | Calificación                     | 0%                                 
+2   | 1. RFC (13 dígitos):             | SALA991118FXO                      
+3   | 3. Fecha de aplicación:          | 22/09/25                           
+4   | 4. Género:                       | Femenino                           
+5   | 5. Edad en años:                 | 25 - 29                            
+6   | 6. Estado civil:                 | Soltero                            
+7   | 7. Nivel de estudios:            | Licenciatura terminada             
+8   | 8. Departamento:                 | Talento Humano                     
+9   | 9. Tipo de puesto:               | Anfitrión de Línea                 
+10  | 10. Tipo de jornada de trabajo   | Fijo diurno (entre las 6:00 y      
+11  | 11. Realiza rotación de turnos   | No                                 
+12  | 12. Tiempo en el puesto actual   | Entre 1 a 4 años                   
+13  | 13. Tiempo experiencia laboral   | Entre 1 a 4 años                   
+14  | 14. El espacio donde trabajo m   | Siempre                            
+15  | 15. Mi trabajo me exige hacer    | Casi nunca                         
+16  | 16. Me preocupa sufrir un acci   | Siempre                            
+17  | 17. Considero que en mi trabaj   | Siempre                            
+18  | 18. Considero que las activida   | Nunca                              
+19  | 19. Por la cantidad de trabajo   | Casi nunca                         
