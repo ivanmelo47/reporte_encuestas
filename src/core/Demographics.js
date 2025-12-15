@@ -13,6 +13,7 @@ function analyzeDemographics(rows, columnMap) {
     rows.forEach(row => {
         Object.keys(columnMap).forEach(key => {
             const colIndex = columnMap[key];
+            if (colIndex === undefined) return; // Skip if no mapping exists for this key
             const val = row[colIndex];
             if (val !== undefined && val !== null && String(val).trim() !== '') {
                 const cleanVal = String(val).trim();

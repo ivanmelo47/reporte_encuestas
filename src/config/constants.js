@@ -25,7 +25,8 @@ const INDICES_GENERIC = {
     SCHOOL: 7,
     DEPT: 8,
     TYPE: 9,
-    TENURE: 12,
+    TENURE: 12, // 12. Tiempo en Puesto
+    EXPERIENCE: 13, // 13. Tiempo de Experiencia
     QUESTIONS_START: 14
 };
 
@@ -38,18 +39,20 @@ const INDICES_PRINCESS = {
     PROPIEDAD: 8, // Exclusive to Princess
     DEPT: 9,
     TYPE: 10,
-    TENURE: 13,
+    TENURE: 13, // 12. Tiempo en Puesto
+    EXPERIENCE: 14, // 13. Tiempo de Experiencia
     QUESTIONS_START: 15
 };
 
-// Demographic Column Mappings (Key -> Index Key in INDICES object)
 const DEMO_MAP_KEYS = {
-    'Género': 'GENDER',
-    'Edad': 'AGE',
-    'Estado Civil': 'CIVIL',
-    'Nivel de Estudios': 'SCHOOL',
-    'Tipo de Puesto': 'TYPE',
-    'Tiempo en Puesto': 'TENURE'
+    '3. Género': 'GENDER',
+    '4. Edad': 'AGE',
+    '5. Estado Civil': 'CIVIL',
+    '6. Nivel de Estudios': 'SCHOOL',
+    '8. Departamento': 'DEPT', // Shared number
+    '9. Tipo de Puesto': 'TYPE',
+    '12. Tiempo en Puesto': 'TENURE',
+    '13. Tiempo de Experiencia Laboral': 'EXPERIENCE'
 };
 
 module.exports = {
