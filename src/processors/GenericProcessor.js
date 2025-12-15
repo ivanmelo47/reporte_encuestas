@@ -1,4 +1,4 @@
-const { INDICES_GENERIC, DEMO_MAP_KEYS, HEADER_ROW_INDEX, DATA_START_INDEX } = require('../config/constants');
+const { INDICES_GENERIC, DEMO_MAP_KEYS, HEADER_ROW_INDEX, DATA_START_INDEX, QUESTION_TYPE_ROW_INDEX } = require('../config/constants');
 const Statistics = require('../core/Statistics');
 const Demographics = require('../core/Demographics');
 const ExcelReader = require('../services/ExcelReader');
@@ -28,6 +28,13 @@ class GenericProcessor {
         for (let i = DATA_START_INDEX; i < data.length; i++) {
             const row = data[i];
             if (!row || row.length === 0) continue;
+            
+            // Fix: Exclude Summary/Footer rows by checking for essential metadata (e.g. Gender or Dept)
+            // If header row or summary row is read as data, it might lack these columns.
+            // INDICES_GENERIC.GENDER = 4
+            // Check if Gender column has value. If not, skip.
+            if (!row[INDICES_GENERIC.GENDER] && !row[INDICES_GENERIC.DEPT]) continue;
+
             allRows.push(row);
             
             const deptCol = INDICES_GENERIC.DEPT;
@@ -38,8 +45,10 @@ class GenericProcessor {
 
         // 3. Stats Generation
         
+        const questionTypes = data[QUESTION_TYPE_ROW_INDEX];
+
         // A. Analisis General
-        const generalStats = Statistics.analyzeQuestions(allRows, headers, INDICES_GENERIC.QUESTIONS_START);
+        const generalStats = Statistics.analyzeQuestions(allRows, headers, INDICES_GENERIC.QUESTIONS_START, questionTypes);
         const generalRows = this._formatStatsOutput('ANALISIS GENERAL (TODOS LOS DEPARTAMENTOS)', generalStats);
         
         // B. Demografia General
@@ -59,7 +68,7 @@ class GenericProcessor {
         // D. Scoring by Dept (Main)
         const mainRows = [];
         Object.keys(departments).forEach(dept => {
-            const stats = Statistics.analyzeQuestions(departments[dept], headers, INDICES_GENERIC.QUESTIONS_START);
+            const stats = Statistics.analyzeQuestions(departments[dept], headers, INDICES_GENERIC.QUESTIONS_START, questionTypes);
             if (stats.length > 0) {
                 mainRows.push(['', '', '', '', '', '', '', '', '']);
                 const formatted = this._formatStatsOutput(`DEPARTAMENTO: ${dept.toUpperCase()}`, stats);

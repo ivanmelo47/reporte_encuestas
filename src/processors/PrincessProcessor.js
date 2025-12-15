@@ -1,4 +1,4 @@
-const { INDICES_PRINCESS, DEMO_MAP_KEYS, HEADER_ROW_INDEX, DATA_START_INDEX } = require('../config/constants');
+const { INDICES_PRINCESS, DEMO_MAP_KEYS, HEADER_ROW_INDEX, DATA_START_INDEX, QUESTION_TYPE_ROW_INDEX } = require('../config/constants');
 const Statistics = require('../core/Statistics');
 const Demographics = require('../core/Demographics');
 const ExcelReader = require('../services/ExcelReader');
@@ -27,6 +27,10 @@ class PrincessProcessor {
             const row = data[i];
             if (!row || row.length === 0) continue;
             
+            // Fix: Exclude Summary/Footer rows
+            // INDICES_PRINCESS.GENDER = 4
+            if (!row[INDICES_PRINCESS.GENDER] && !row[INDICES_PRINCESS.PROPIEDAD]) continue;
+
             const propCol = INDICES_PRINCESS.PROPIEDAD;
             const propName = row[propCol] ? String(row[propCol]).trim() : 'Desconocida';
             if (!properties[propName]) properties[propName] = [];
@@ -36,14 +40,15 @@ class PrincessProcessor {
         const results = [];
         Object.keys(properties).forEach(propName => {
             const rows = properties[propName];
-            const workbookData = this._processGroup(rows, propName, headers);
+            const questionTypes = data[QUESTION_TYPE_ROW_INDEX];
+            const workbookData = this._processGroup(rows, propName, headers, questionTypes);
             results.push(workbookData);
         });
 
         return results;
     }
 
-    _processGroup(rows, groupName, headers) {
+    _processGroup(rows, groupName, headers, questionTypes) {
         // Group by Department within this Property
         const departments = {};
         rows.forEach(row => {
@@ -54,7 +59,7 @@ class PrincessProcessor {
         });
 
         // A. Analisis General
-        const generalStats = Statistics.analyzeQuestions(rows, headers, INDICES_PRINCESS.QUESTIONS_START);
+        const generalStats = Statistics.analyzeQuestions(rows, headers, INDICES_PRINCESS.QUESTIONS_START, questionTypes);
         const generalRows = this._formatStatsOutput('ANALISIS GENERAL (TODOS LOS DEPARTAMENTOS)', generalStats);
 
         // B. Demografia General
@@ -74,7 +79,7 @@ class PrincessProcessor {
         // D. Scoring by Dept (Main)
         const mainRows = [];
         Object.keys(departments).forEach(dept => {
-            const stats = Statistics.analyzeQuestions(departments[dept], headers, INDICES_PRINCESS.QUESTIONS_START);
+            const stats = Statistics.analyzeQuestions(departments[dept], headers, INDICES_PRINCESS.QUESTIONS_START, questionTypes);
             if (stats.length > 0) {
                 mainRows.push(['', '', '', '', '', '', '', '', '']);
                 const formatted = this._formatStatsOutput(`DEPARTAMENTO: ${dept.toUpperCase()}`, stats);

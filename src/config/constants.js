@@ -1,6 +1,7 @@
 
 // Sheet config
 const SHEET_DATA_NAME = 'Worksheet';
+const QUESTION_TYPE_ROW_INDEX = 8; // Row 9 in Excel (0-based)
 const HEADER_ROW_INDEX = 10;
 const DATA_START_INDEX = 11;
 
@@ -53,6 +54,7 @@ const DEMO_MAP_KEYS = {
 
 module.exports = {
     SHEET_DATA_NAME,
+    QUESTION_TYPE_ROW_INDEX,
     HEADER_ROW_INDEX,
     DATA_START_INDEX,
     SCORE_MAP,
