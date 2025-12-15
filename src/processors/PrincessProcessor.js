@@ -106,9 +106,24 @@ class PrincessProcessor {
         const rows = [];
         rows.push([title, '', '', '', '', '', '', '', '']);
         rows.push(this.headerMain);
+        
+        let totalSum = 0;
+        let count = 0;
+
         stats.forEach(stat => {
             rows.push([stat.q, stat.avg, stat.score100, stat.total, stat.d1, stat.d2, stat.d3, stat.d4, stat.d5]);
+            
+            const val = parseFloat(stat.score100);
+            if (!isNaN(val)) {
+                totalSum += val;
+                count++;
+            }
         });
+
+        const globalAvg = count > 0 ? (totalSum / count).toFixed(2) : '0.00';
+        rows.push(['', '', '', '', '', '', '', '', '']);
+        rows.push(['PROMEDIO GENERAL', '', `${globalAvg}%`, '', '', '', '', '', '']);
+
         return rows;
     }
 }
