@@ -85,7 +85,7 @@
       "pregunta_tabla_grande": "El espacio donde trabajo me permite realizar mis actividades de manera segura e higiénica"
     },
     {
-      "pregunta_tabla_pequena": "Mi líder me brinda herramientas para poder tomar decisiones.\r\n",
+      "pregunta_tabla_pequena": "Mi Líder me brinda herramientas para tomar decisiones.",
       "pregunta_tabla_grande": "Mi jefe ayuda a organizar mejor el trabajo"
     },
     {
@@ -105,6 +105,18 @@
       "pregunta_tabla_grande": "Considero que el tiempo en el trabajo es mucho y perjudica mis actividades familiares o personales"
     },
     {
+      "pregunta_tabla_pequena": "En Arena GNP \/ Forum Mundo Imperial se preocupan por mi bienestar.",
+      "pregunta_tabla_grande": "Considero que el tiempo en el trabajo es mucho y perjudica mis actividades familiares o personales"
+    },
+    {
+      "pregunta_tabla_pequena": "En Dirección General Mundo Imperial se preocupan por mi bienestar.",
+      "pregunta_tabla_grande": "Considero que el tiempo en el trabajo es mucho y perjudica mis actividades familiares o personales"
+    },
+    {
+      "pregunta_tabla_pequena": "En Servicios Corporativos Mundo Imperial se preocupan por mi bienestar.",
+      "pregunta_tabla_grande": "Considero que el tiempo en el trabajo es mucho y perjudica mis actividades familiares o personales"
+    },
+    {
       "pregunta_tabla_pequena": "Aquí la gente es tratada justamente.",
       "pregunta_tabla_grande": "En mi trabajo me hacen sentir parte del grupo"
     },
@@ -121,6 +133,18 @@
       "pregunta_tabla_grande": "Siento orgullo de laborar en este centro de trabajo"
     },
     {
+      "pregunta_tabla_pequena": "Me siento orgulloso de trabajar en Arena GNP \/ Forum Mundo Imperial.",
+      "pregunta_tabla_grande": "Siento orgullo de laborar en este centro de trabajo"
+    },
+    {
+      "pregunta_tabla_pequena": "Me siento orgulloso de trabajar en Dirección General Mundo Imperial.",
+      "pregunta_tabla_grande": "Siento orgullo de laborar en este centro de trabajo"
+    },
+    {
+      "pregunta_tabla_pequena": "Me siento orgulloso de trabajar en Servicios Corporativos Mundo Imperial.",
+      "pregunta_tabla_grande": "Siento orgullo de laborar en este centro de trabajo"
+    },
+    {
       "pregunta_tabla_pequena": "Recomendaría Palacio MI a otros para trabajar.",
       "pregunta_tabla_grande": "En mi trabajo existe continua rotación de personal"
     },
@@ -130,6 +154,18 @@
     },
     {
       "pregunta_tabla_pequena": "Recomendaría Pierre Mundo Imperial a otros para trabajar.",
+      "pregunta_tabla_grande": "En mi trabajo existe continua rotación de personal"
+    },
+    {
+      "pregunta_tabla_pequena": "Recomendaría Servicios Arena GNP \/ Forum Mundo Imperial a otros para trabajar.",
+      "pregunta_tabla_grande": "En mi trabajo existe continua rotación de personal"
+    },
+    {
+      "pregunta_tabla_pequena": "Recomendaría Dirección General Mundo Imperial a otros para trabajar.",
+      "pregunta_tabla_grande": "En mi trabajo existe continua rotación de personal"
+    },
+    {
+      "pregunta_tabla_pequena": "Recomendaría Servicios Corporativos Mundo Imperial a otros para trabajar.",
       "pregunta_tabla_grande": "En mi trabajo existe continua rotación de personal"
     },
     {
@@ -146,6 +182,18 @@
     },
     {
       "pregunta_tabla_pequena": "Considero que Pierre Mundo Imperial es un buen lugar para trabajar.",
+      "pregunta_tabla_grande": "Considero que mi trabajo es estable"
+    },
+    {
+      "pregunta_tabla_pequena": "Considero que Arena GNP \/ Forum Mundo Imperial es un buen lugar para trabajar.",
+      "pregunta_tabla_grande": "Considero que mi trabajo es estable"
+    },
+    {
+      "pregunta_tabla_pequena": "Considero que Dirección General Mundo Imperial es un buen lugar para trabajar.",
+      "pregunta_tabla_grande": "Considero que mi trabajo es estable"
+    },
+    {
+      "pregunta_tabla_pequena": "Considero que Servicios Corporativos Mundo Imperial es un buen lugar para trabajar.",
       "pregunta_tabla_grande": "Considero que mi trabajo es estable"
     }
   ]
