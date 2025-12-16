@@ -40,7 +40,7 @@ class ComparativeProcessor {
 
         // 4. Build Comparison Report per Property
         const sheets = {};
-        const headers = ['Pregunta Tabla Grande', 'Resultado Grande', 'Pregunta Tabla Pequeña', 'Resultado Pequeña', 'Diferencia'];
+        const headers = ['Pregunta', 'Resultado Grande', 'Resultado Pequeña', 'Diferencia'];
 
         for (const [prop, depts] of Object.entries(smallIndex)) {
             const sheetRows = [];
@@ -64,7 +64,6 @@ class ComparativeProcessor {
                 if (deptMapping) {
                     targetLargePropName = deptMapping.propiedad_tabla_grande;
                     targetLargeDeptNameSearch = deptMapping.departamento_tabla_grande;
-                    // console.log(`[Override] Mapping '${dept}' in '${prop}' -> '${targetLargeDeptNameSearch}' in '${targetLargePropName}'`);
                 }
                 
                 // --- END Specific Department Mapping Logic ---
@@ -72,94 +71,62 @@ class ComparativeProcessor {
                 // Resolve Data Source
                 const currentLargeData = largeIndex[targetLargePropName];
                 const deptRows = [];
-                const usedSmallKeys = new Set(); 
+                const usedLargeKeys = new Set(); 
                 
                 let targetDept = null;
-                let largeKeys = [];
-
+                
                 // Pre-calculate Target Dept Key if available
                 if (currentLargeData) {
                     const largeDepts = Object.keys(currentLargeData);
                     targetDept = largeDepts.find(d => this._normalize(d) === this._normalize(targetLargeDeptNameSearch));
-                    if (targetDept) {
-                        largeKeys = Object.keys(currentLargeData[targetDept]);
-                    }
                 }
 
-                // 1. Process Large Table Order (Master List)
-                largeKeys.forEach(qLargeCleaned => {
-                    const lgObj = currentLargeData[targetDept][qLargeCleaned];
-                    const scoreLarge = lgObj.score;
-                    const textLarge = lgObj.text;
-
-                    // Search for a matching Small Question in this Dept
-                    // We need to find if any 'mapping.pregunta_tabla_grande' cleans to 'qLargeCleaned'
-                    // AND that mapping.pregunta_tabla_pequena exists in 'questions'
+                // 1. Process Small Table Order (Primary)
+                for (const [qSmallCleaned, scoreSmall] of Object.entries(questions)) {
+                    // Find mapping
+                    const mapping = this.comparativeMap.find(m => this._cleanQuestion(m.pregunta_tabla_pequena) === qSmallCleaned);
                     
+                    let scoreLarge = 'N/A';
+                    let textLarge = '---';
+                    let diff = 'N/A';
                     let matchFound = false;
 
-                    // Inefficient double loop but robust. Optimization: Pre-index maps could help but dataset is small.
-                    for (const [qSmallCleaned, scoreSmall] of Object.entries(questions)) {
-                        const mapping = this.comparativeMap.find(m => 
-                            this._cleanQuestion(m.pregunta_tabla_pequena) === qSmallCleaned &&
-                            this._cleanQuestion(m.pregunta_tabla_grande) === qLargeCleaned
-                        );
-
-                        if (mapping) {
-                            // Match Found!
-                            usedSmallKeys.add(qSmallCleaned);
-                            matchFound = true;
-                            
-                            let diff = 'N/A';
-                            const nSmall = parseFloat(scoreSmall);
-                            const nLarge = parseFloat(scoreLarge);
-                            if (!isNaN(nSmall) && !isNaN(nLarge)) {
-                                diff = (nSmall - nLarge).toFixed(2);
-                            }
-
-                            deptRows.push([
-                                textLarge, // Use Original Large Text
-                                scoreLarge,
-                                mapping.pregunta_tabla_pequena,
-                                scoreSmall,
-                                diff
-                            ]);
-                            // Assuming 1-to-1 mapping, we break. If 1-to-many, we might need to handle differently.
-                            break; 
-                        }
-                    }
-
-                    if (!matchFound) {
-                        // Large Only
-                        deptRows.push([
-                            textLarge,
-                            scoreLarge,
-                            '---',
-                            'N/A',
-                            'N/A'
-                        ]);
-                    }
-                });
-
-                // 2. Process Remaining (Unused) Small Questions
-                // These are small questions that:
-                // a) Have no mapping in Comparative.json
-                // b) Map to a Large Question that DOES NOT EXIST in the current large data
-                for (const [qSmallCleaned, scoreSmall] of Object.entries(questions)) {
-                    if (!usedSmallKeys.has(qSmallCleaned)) {
-                        // Find potential mapping name to show context, or just show Small Name
-                        const mapping = this.comparativeMap.find(m => this._cleanQuestion(m.pregunta_tabla_pequena) === qSmallCleaned);
-                        const largeName = mapping ? mapping.pregunta_tabla_grande : '---';
+                    if (mapping) {
+                        const qLarge = mapping.pregunta_tabla_grande;
+                        // Use mapped large name as default text (even if not found in data)
+                        textLarge = qLarge; 
                         
+                        const qLargeCleaned = this._cleanQuestion(qLarge);
+                        
+                        // Lookup in Large Index
+                        if (targetDept && currentLargeData[targetDept][qLargeCleaned]) {
+                            const lgObj = currentLargeData[targetDept][qLargeCleaned];
+                            scoreLarge = lgObj.score;
+                            // Use actual text from file if available, otherwise mapped name
+                            textLarge = lgObj.text; 
+                            usedLargeKeys.add(qLargeCleaned); // Mark as used
+                            matchFound = true;
+                        }
+
+                        if (scoreLarge !== 'N/A') {
+                             const nSmall = parseFloat(scoreSmall);
+                             const nLarge = parseFloat(scoreLarge);
+                             if (!isNaN(nSmall) && !isNaN(nLarge)) {
+                                 diff = (nLarge - nSmall).toFixed(2) + '%';
+                             }
+                        }
+
+                        // Output Row (Strictly Mapped)
                         deptRows.push([
-                            largeName, // Expected large name
-                            'N/A', // Missing in Large
-                            mapping ? mapping.pregunta_tabla_pequena : qSmallCleaned, 
-                            scoreSmall,
-                            'N/A'
+                            mapping.pregunta_tabla_pequena, // Use Mapped Text
+                            (scoreLarge !== 'N/A' && !String(scoreLarge).includes('%')) ? scoreLarge + '%' : scoreLarge,
+                            (scoreSmall !== 'N/A' && !String(scoreSmall).includes('%')) ? scoreSmall + '%' : scoreSmall,
+                            diff
                         ]);
                     }
                 }
+                
+                // Unused Large Questions Logic REMOVED per user request (Strict Mapping)
 
                 if (deptRows.length > 0) {
                     sheetRows.push([`DEPARTAMENTO: ${dept}`, '', '', '', '']);
