@@ -33,7 +33,10 @@ const JOBS = [
         excelInputs: {
              'Palacio Mundo Imperial': 'analisis/analisis_palacio.xlsx',
              'Pierre Mundo Imperial': 'analisis/analisis_pierre.xlsx',
-             'Princess Mundo Imperial': 'analisis/analisis_princess_princess_mundo_imperial.xlsx'
+             'Princess Mundo Imperial': 'analisis/analisis_princess_princess_mundo_imperial.xlsx',
+             'Arena GNP Seguros': 'analisis/analisis_princess_arena_gnp_seguros.xlsx',
+             'Direccion': 'analisis/analisis_princess_direccion.xlsx',
+             'Mundo Imperial': 'analisis/analisis_princess_mundo_imperial.xlsx'
         },
         sheetName: 'Comparativo'
     }

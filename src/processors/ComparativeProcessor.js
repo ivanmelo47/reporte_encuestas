@@ -18,6 +18,7 @@ class ComparativeProcessor {
         }
         const compData = JSON.parse(fs.readFileSync(config.comparativoPath, 'utf8'));
         this.comparativeMap = compData.comparativo_completo;
+        this.propertyMap = compData.comparativo_propiedad; // Array of { propiedad_tabla_pequena, propiedad_tabla_grande }
 
         // 2. Load P.json (Small Table Data)
         const jsonData = this._loadJsonData(config.jsonPath);
@@ -30,7 +31,7 @@ class ComparativeProcessor {
         for (const [propName, filePath] of Object.entries(config.excelMap)) {
             console.log(`Loading Analyzed Report for ${propName}: ${filePath}`);
             if (fs.existsSync(filePath)) {
-                largeIndex[propName] = this._readProcessedExcel(filePath);
+                largeIndex[propName] = this._readProcessedExcel(filePath, propName);
             } else {
                 console.warn(`File not found: ${filePath}`);
             }
@@ -43,6 +44,17 @@ class ComparativeProcessor {
         for (const [prop, depts] of Object.entries(smallIndex)) {
             const sheetRows = [];
             
+            // Find mapped large property name
+            const propMapping = this.propertyMap.find(m => m.propiedad_tabla_pequena === prop);
+            const largePropName = propMapping ? propMapping.propiedad_tabla_grande : prop;
+            
+            // Validate availability
+            const currentLargeData = largeIndex[largePropName];
+            if (!currentLargeData) {
+                console.warn(`No large data found for property mapping: '${prop}' -> '${largePropName}'`);
+                // We continue to print the structure but with N/A
+            }
+
             for (const [dept, questions] of Object.entries(depts)) {
                 const deptRows = [];
                 
@@ -57,13 +69,13 @@ class ComparativeProcessor {
                         let diff = 'N/A';
                         
                         // Lookup in Large Index
-                        if (largeIndex[prop]) {
-                            // Fuzzy Dept Match
-                            const largeDepts = Object.keys(largeIndex[prop]);
-                            const targetDept = largeDepts.find(d => d.toLowerCase().trim() === dept.toLowerCase().trim());
+                        if (currentLargeData) {
+                            // Fuzzy Dept Match with Normalization (Ignore Case & Accents)
+                            const largeDepts = Object.keys(currentLargeData);
+                            const targetDept = largeDepts.find(d => this._normalize(d) === this._normalize(dept));
                             
-                            if (targetDept && largeIndex[prop][targetDept][qLargeCleaned] !== undefined) {
-                                scoreLarge = largeIndex[prop][targetDept][qLargeCleaned];
+                            if (targetDept && currentLargeData[targetDept][qLargeCleaned] !== undefined) {
+                                scoreLarge = currentLargeData[targetDept][qLargeCleaned];
                             }
                         }
 
@@ -106,37 +118,57 @@ class ComparativeProcessor {
         };
     }
 
-    _readProcessedExcel(filePath) {
+    _readProcessedExcel(filePath, propName) {
         // Reads a processed analysis file. 
-        // We need to find the correct sheet. Usually it's the one that is NOT 'Analisis General' etc.
-        // Assuming the file uses standard GenericProcessor output.
-        // We look for a sheet that contains "DEPARTAMENTO:" blocks.
+        // propName matches keys in config.excelMap (e.g. "Arena GNP Seguros", "Direccion")
         
         try {
-            // Since we can't easily list sheets with our current ExcelReader helper (it defaults to first sheet or specific name),
-            // we might have to try standard names.
-            // However, ExcelReader uses `xlsx.readFile` internally but returns `utils.sheet_to_json(workbook.Sheets[sheetName])`.
-            // If we don't pass sheetName, it defaults to... logic in ExcelReader? 
-            // Let's check ExcelReader.
-            // If I can't check, I'll rely on "Palacio" for Palacio, etc.
+            // Determine sheet name based on property name
+            let sheetName = propName; // Default
             
-            // For now, let's try reading 'Palacio', 'Pierre', 'Princess Mundo Imperial'.
-            // Or better, read 'Sheet1' if it was a simple file, but these are generated.
-            // GenericProcessor names the sheet as `sheetName` passed to it.
-            // In index.js:
-            // Palacio -> sheetName: 'Palacio'
-            // Pierre -> sheetName: 'Pierre'
-            // Princess -> sheetName: 'Princess Mundo Imperial'
-            
-            // I'll try to infer strict names based on filename or just hardcode the expected ones.
-            let sheetName = 'Palacio';
-            if (filePath.toLowerCase().includes('pierre')) sheetName = 'Pierre';
-            if (filePath.toLowerCase().includes('princess')) sheetName = 'Princess Mundo Imperial';
-            
-            const data = ExcelReader.read(filePath, sheetName);
+            // Map specific names if needed based on user input
+            if (propName === 'Palacio Mundo Imperial') sheetName = 'Palacio';
+            if (propName === 'Pierre Mundo Imperial') sheetName = 'Pierre';
+            if (propName === 'Direccion') sheetName = 'Dirección'; // Fix accent
+            // 'Arena GNP Seguros' -> 'Arena GNP Seguros' (matches default)
+            // 'Princess Mundo Imperial' -> 'Princess Mundo Imperial' (matches default)
+            // 'Mundo Imperial' -> 'Mundo Imperial' (matches default)
+
+            // Try multiple sheet name variations
+            const candidates = [
+                sheetName,
+                sheetName.trim(),
+                sheetName.normalize("NFD").replace(/[\u0300-\u036f]/g, ""), // No accent
+                'Dirección', // Explicit correction
+                'Arena GNP Seguros',
+                'Mundo Imperial',
+                'Palacio',
+                'Pierre',
+                'Princess Mundo Imperial',
+                'Dirección General',
+                'Direccion General'
+            ];
+
+            let data = [];
+            for (const name of candidates) {
+                try {
+                     const attempt = ExcelReader.read(filePath, name);
+                     if (attempt && attempt.length > 0) {
+                         // Verify it has data
+                         if(attempt.some(row => row && row[0] && String(row[0]).startsWith('DEPARTAMENTO:'))) {
+                             data = attempt;
+                             console.log(`Found valid data in sheet: '${name}'`);
+                             break;
+                         }
+                     }
+                } catch (e) { /* ignore */ }
+            }
+
             if (!data || data.length === 0) {
-                console.warn(`Sheet ${sheetName} empty or not found in ${filePath}`);
-                return {};
+                 // Fallback: Try reading the default/first sheet if ExcelReader supports it (e.g. name=null or undefined)
+                 // Or we can try to guess based on standard names
+                 console.warn(`Could not find valid data sheet in ${filePath}. Tried: ${candidates.join(', ')}`);
+                 return {};
             }
 
             // Parse Data
@@ -225,6 +257,10 @@ class ComparativeProcessor {
             index[p][d][q] = s;
         });
         return index;
+    }
+
+    _normalize(text) {
+        return String(text).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
     }
 
     _cleanQuestion(text) {
