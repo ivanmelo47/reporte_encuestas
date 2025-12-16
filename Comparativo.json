@@ -1,0 +1,127 @@
+{
+  "comparativo_propiedad": [
+    {
+      "propiedad_tabla_pequena": "Arena GNP \/ Forum Mundo Imperial",
+      "propiedad_tabla_grande": "Arena GNP Seguros"
+    },
+    {
+      "propiedad_tabla_pequena": "Dirección General",
+      "propiedad_tabla_grande": "Direccion General"
+    },
+    {
+      "propiedad_tabla_pequena": "Palacio Mundo Imperial",
+      "propiedad_tabla_grande": "Palacio Mundo Imperial"
+    },
+    {
+      "propiedad_tabla_pequena": "Pierre Mundo Imperial",
+      "propiedad_tabla_grande": "Pierre Mundo Imperial"
+    },
+    {
+      "propiedad_tabla_pequena": "Princess Mundo Imperial",
+      "propiedad_tabla_grande": "Princess Mundo Imperial"
+    },
+    {
+      "propiedad_tabla_pequena": "Servicios Corporativos Mundo Imperial",
+      "propiedad_tabla_grande": "Mundo Imperial"
+    }
+  ],
+
+  "comparativo_completo": [
+    {
+      "pregunta_tabla_pequena": "La orientación que me da mi Líder inmediato me ayuda a realizar mejor mi trabajo.",
+      "pregunta_tabla_grande": "La orientación que me da mi jefe me ayuda a realizar mejor mi trabajo"
+    },
+    {
+      "pregunta_tabla_pequena": "La comunicación que tiene mi Líder inmediato conmigo es clara y respetuosa.",
+      "pregunta_tabla_grande": "Mi jefe me comunica a tiempo la información relacionada con el trabajo"
+    },
+    {
+      "pregunta_tabla_pequena": "Mi opinión es escuchada.",
+      "pregunta_tabla_grande": "Mi jefe tiene en cuenta mis puntos de vista y opiniones"
+    },
+    {
+      "pregunta_tabla_pequena": "Los Lideres de esta propiedad toman decisiones que me ayudan a realizar mejor mi trabajo.",
+      "pregunta_tabla_grande": "Mi jefe ayuda a solucionar los problemas que se presentan en el trabajo"
+    },
+    {
+      "pregunta_tabla_pequena": "Por la cantidad de trabajo que tengo debo quedarme tiempo adicional a mi turno.",
+      "pregunta_tabla_grande": "Por la cantidad de trabajo que tengo debo quedarme tiempo adicional a mi turno"
+    },
+    {
+      "pregunta_tabla_pequena": "Considero que en mi trabajo me piden hacer cosas innecesarias.",
+      "pregunta_tabla_grande": "Considero que en mi trabajo me piden hacer cosas innecesarias"
+    },
+    {
+      "pregunta_tabla_pequena": "Mi Líder inmediato me provee los conocimientos y el entrenamiento que requiero para realizar mi trabajo adecuadamente.",
+      "pregunta_tabla_grande": "Recibo capacitación útil para hacer mi trabajo"
+    },
+    {
+      "pregunta_tabla_pequena": "Tengo las herramientas / equipo / utensilios de trabajo necesarios para poder realizar mi trabajo adecuadamente.",
+      "pregunta_tabla_grande": "El espacio donde trabajo me permite realizar mis actividades de manera segura e higiénica"
+    },
+    {
+      "pregunta_tabla_pequena": "Mi Líder me brinda herramientas para tomar decisiones.",
+      "pregunta_tabla_grande": "Mi jefe ayuda a organizar mejor el trabajo"
+    },
+    {
+      "pregunta_tabla_pequena": "Mi Líder inmediato reconoce el trabajo bien hecho y el esfuerzo extra.",
+      "pregunta_tabla_grande": "Si obtengo los resultados esperados en mi trabajo me recompensan o reconocen"
+    },
+    {
+      "pregunta_tabla_pequena": "En Palacio MI se preocupan por mi bienestar.",
+      "pregunta_tabla_grande": "Considero que el tiempo en el trabajo es mucho y perjudica mis actividades familiares o personales"
+    },
+    {
+      "pregunta_tabla_pequena": "En Princess Mundo Imperial se preocupan por mi bienestar.",
+      "pregunta_tabla_grande": "Considero que el tiempo en el trabajo es mucho y perjudica mis actividades familiares o personales"
+    },
+    {
+      "pregunta_tabla_pequena": "En Pierre Mundo Imperial se preocupan por mi bienestar.",
+      "pregunta_tabla_grande": "Considero que el tiempo en el trabajo es mucho y perjudica mis actividades familiares o personales"
+    },
+    {
+      "pregunta_tabla_pequena": "Aquí la gente es tratada justamente.",
+      "pregunta_tabla_grande": "En mi trabajo me hacen sentir parte del grupo"
+    },
+    {
+      "pregunta_tabla_pequena": "Me siento orgulloso de trabajar en Palacio MI.",
+      "pregunta_tabla_grande": "Siento orgullo de laborar en este centro de trabajo"
+    },
+    {
+      "pregunta_tabla_pequena": "Me siento orgulloso de trabajar en Princess Mundo Imperial.",
+      "pregunta_tabla_grande": "Siento orgullo de laborar en este centro de trabajo"
+    },
+    {
+      "pregunta_tabla_pequena": "Me siento orgulloso de trabajar en Pierre Mundo Imperial.",
+      "pregunta_tabla_grande": "Siento orgullo de laborar en este centro de trabajo"
+    },
+    {
+      "pregunta_tabla_pequena": "Recomendaría Palacio MI a otros para trabajar.",
+      "pregunta_tabla_grande": "En mi trabajo existe continua rotación de personal"
+    },
+    {
+      "pregunta_tabla_pequena": "Recomendaría Princess Mundo Imperial a otros para trabajar.",
+      "pregunta_tabla_grande": "En mi trabajo existe continua rotación de personal"
+    },
+    {
+      "pregunta_tabla_pequena": "Recomendaría Pierre Mundo Imperial a otros para trabajar.",
+      "pregunta_tabla_grande": "En mi trabajo existe continua rotación de personal"
+    },
+    {
+      "pregunta_tabla_pequena": "Las áreas con quien tengo contacto me hacen solicitudes de manera clara y respetuosa.",
+      "pregunta_tabla_grande": "Entre compañeros solucionamos los problemas de trabajo de forma respetuosa"
+    },
+    {
+      "pregunta_tabla_pequena": "Considero que Palacio Mundo Imperial es un buen lugar para trabajar.",
+      "pregunta_tabla_grande": "Considero que mi trabajo es estable"
+    },
+    {
+      "pregunta_tabla_pequena": "Considero que Princess Mundo Imperial es un buen lugar para trabajar.",
+      "pregunta_tabla_grande": "Considero que mi trabajo es estable"
+    },
+    {
+      "pregunta_tabla_pequena": "Considero que Pierre Mundo Imperial es un buen lugar para trabajar.",
+      "pregunta_tabla_grande": "Considero que mi trabajo es estable"
+    }
+  ]
+}

@@ -25,6 +25,17 @@ const JOBS = [
         type: 'JSON_REPORT',
         input: 'P.json',
         sheetName: 'Reporte_Numerico'
+    },
+    {
+        type: 'COMPARATIVE',
+        input: 'Comparativo.json',
+        jsonInput: 'P.json',
+        excelInputs: {
+             'Palacio Mundo Imperial': 'analisis/analisis_palacio.xlsx',
+             'Pierre Mundo Imperial': 'analisis/analisis_pierre.xlsx',
+             'Princess Mundo Imperial': 'analisis/analisis_princess_princess_mundo_imperial.xlsx'
+        },
+        sheetName: 'Comparativo'
     }
 ];
 
@@ -75,6 +86,24 @@ async function main() {
                 result.outputName = path.join(OUTPUT_DIR, result.outputName);
                 
                 await ExcelWriter.writeStyledReport(result);
+                console.log(`Saved: ${result.outputName}`);
+            } else if (job.type === 'COMPARATIVE') {
+                const ComparativeProcessor = require('./processors/ComparativeProcessor');
+                const processor = new ComparativeProcessor();
+                
+                const config = {
+                    comparativoPath: path.join(__dirname, '../', job.input),
+                    jsonPath: path.join(__dirname, '../', job.jsonInput),
+                    excelMap: {}
+                };
+                
+                for (const [prop, filename] of Object.entries(job.excelInputs)) {
+                    config.excelMap[prop] = path.join(__dirname, '../', filename);
+                }
+
+                const result = processor.process(config);
+                const savePath = path.join(OUTPUT_DIR, result.outputName);
+                ExcelWriter.write(result.sheets, savePath);
                 console.log(`Saved: ${result.outputName}`);
             }
         } catch (error) {
