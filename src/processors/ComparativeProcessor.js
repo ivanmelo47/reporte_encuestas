@@ -18,7 +18,8 @@ class ComparativeProcessor {
         }
         const compData = JSON.parse(fs.readFileSync(config.comparativoPath, 'utf8'));
         this.comparativeMap = compData.comparativo_completo;
-        this.propertyMap = compData.comparativo_propiedad; // Array of { propiedad_tabla_pequena, propiedad_tabla_grande }
+        this.propertyMap = compData.comparativo_propiedad; 
+        this.departmentMap = compData.comparativo_departamentos || []; // Load specific dept map
 
         // 2. Load P.json (Small Table Data)
         const jsonData = this._loadJsonData(config.jsonPath);
@@ -44,18 +45,33 @@ class ComparativeProcessor {
         for (const [prop, depts] of Object.entries(smallIndex)) {
             const sheetRows = [];
             
-            // Find mapped large property name
+            // Standard Property Mapping (Default)
             const propMapping = this.propertyMap.find(m => m.propiedad_tabla_pequena === prop);
-            const largePropName = propMapping ? propMapping.propiedad_tabla_grande : prop;
+            const defaultLargePropName = propMapping ? propMapping.propiedad_tabla_grande : prop;
             
-            // Validate availability
-            const currentLargeData = largeIndex[largePropName];
-            if (!currentLargeData) {
-                console.warn(`No large data found for property mapping: '${prop}' -> '${largePropName}'`);
-                // We continue to print the structure but with N/A
-            }
-
             for (const [dept, questions] of Object.entries(depts)) {
+                
+                // --- START Specific Department Mapping Logic ---
+                // Check if specific rule exists for this Property + Dept
+                const deptMapping = this.departmentMap.find(m => 
+                    m.propiedad_tabla_pequena === prop && 
+                    this._normalize(m.departamento_tabla_pequena) === this._normalize(dept)
+                );
+
+                let targetLargePropName = defaultLargePropName;
+                let targetLargeDeptNameSearch = dept; // Default: search for same name
+
+                if (deptMapping) {
+                    targetLargePropName = deptMapping.propiedad_tabla_grande;
+                    targetLargeDeptNameSearch = deptMapping.departamento_tabla_grande;
+                    // console.log(`[Override] Mapping '${dept}' in '${prop}' -> '${targetLargeDeptNameSearch}' in '${targetLargePropName}'`);
+                }
+                
+                // --- END Specific Department Mapping Logic ---
+
+                // Resolve Data Source
+                const currentLargeData = largeIndex[targetLargePropName];
+                
                 const deptRows = [];
                 
                 for (const [qSmallCleaned, scoreSmall] of Object.entries(questions)) {
@@ -72,7 +88,8 @@ class ComparativeProcessor {
                         if (currentLargeData) {
                             // Fuzzy Dept Match with Normalization (Ignore Case & Accents)
                             const largeDepts = Object.keys(currentLargeData);
-                            const targetDept = largeDepts.find(d => this._normalize(d) === this._normalize(dept));
+                            // Match against the "Search Target" (either original name or mapped specific name)
+                            const targetDept = largeDepts.find(d => this._normalize(d) === this._normalize(targetLargeDeptNameSearch));
                             
                             if (targetDept && currentLargeData[targetDept][qLargeCleaned] !== undefined) {
                                 scoreLarge = currentLargeData[targetDept][qLargeCleaned];

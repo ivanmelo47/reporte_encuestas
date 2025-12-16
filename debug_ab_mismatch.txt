@@ -1,0 +1,98 @@
+DEBUG: Prop 'Princess Mundo Imperial', Dept 'A_B Administración y Cajas Departamentales'
+Mapped To Strategy: 'A&B ADMINISTRACIÓN' (Rule Exists: true)
+Found Match in Large Data: 'A&B ADMINISTRACIÓN'
+
+--- LARGE KEYS & VALUES (Excel) ---
+"el espacio donde trabajo me permite realizar mis actividades de manera segura e higienica": 100.00
+"mi trabajo me exige hacer mucho esfuerzo fisico": 0.00
+"me preocupa sufrir un accidente en mi trabajo": 100.00
+"considero que en mi trabajo se aplican las normas de seguridad y salud en el trabajo": 100.00
+"considero que las actividades que realizo son peligrosas": 100.00
+"por la cantidad de trabajo que tengo debo quedarme tiempo adicional a mi turno": 0.00
+"por la cantidad de trabajo que tengo debo trabajar sin parar": 0.00
+"considero que es necesario mantener un ritmo de trabajo acelerado": 0.00
+"mi trabajo exige que este muy concentrado": 0.00
+"mi trabajo requiere que memorice mucha informacion": 0.00
+"en mi trabajo tengo que tomar decisiones dificiles muy rapido": 0.00
+"mi trabajo exige que atienda varios asuntos al mismo tiempo": 0.00
+"en mi trabajo soy responsable de cosas de mucho valor": 0.00
+"respondo ante mi jefe por los resultados de toda mi area de trabajo": 0.00
+"en el trabajo me dan ordenes contradictorias": 0.00
+"considero que en mi trabajo me piden hacer cosas innecesarias": 0.00
+"trabajo horas extras mas de tres veces a la semana": 0.00
+"mi trabajo me exige laborar en dias de descanso, festivos o fines de semana": 0.00
+"considero que el tiempo en el trabajo es mucho y perjudica mis actividades familiares o personales": 0.00
+"debo atender asuntos de trabajo cuando estoy en casa": 100.00
+"pienso en las actividades familiares o personales cuando estoy en mi trabajo": 0.00
+"pienso que mis responsabilidades familiares afectan mi trabajo": 100.00
+"mi trabajo permite que desarrolle nuevas habilidades": 100.00
+"en mi trabajo puedo aspirar a un mejor puesto": 100.00
+"durante mi jornada de trabajo puedo tomar pausas cuando las necesito": 100.00
+"puedo decidir cuanto trabajo realizo durante la jornada laboral": 0.00
+"puedo decidir la velocidad a la que realizo mis actividades en mi trabajo": 100.00
+"puedo cambiar el orden de las actividades que realizo en mi trabajo": 100.00
+"los cambios que se presentan en mi trabajo dificultan mi labor": 0.00
+"cuando se presentan cambios en mi trabajo se tienen en cuenta mis ideas o aportaciones": 0.00
+"me informan con claridad cuales son mis funciones": 0.00
+"me explican claramente los resultados que debo obtener en mi trabajo": 100.00
+"me explican claramente los objetivos de mi trabajo": 100.00
+"me informan con quien puedo resolver problemas o asuntos de trabajo": 100.00
+"me permiten asistir a capacitaciones relacionadas con mi trabajo": 100.00
+"recibo capacitacion util para hacer mi trabajo": 100.00
+"mi jefe ayuda a organizar mejor el trabajo": 100.00
+"mi jefe tiene en cuenta mis puntos de vista y opiniones": 100.00
+"mi jefe me comunica a tiempo la informacion relacionada con el trabajo": 100.00
+"la orientacion que me da mi jefe me ayuda a realizar mejor mi trabajo": 100.00
+"mi jefe ayuda a solucionar los problemas que se presentan en el trabajo": 100.00
+"puedo confiar en mis companeros de trabajo": 0.00
+"entre companeros solucionamos los problemas de trabajo de forma respetuosa": 100.00
+"en mi trabajo me hacen sentir parte del grupo": 0.00
+"cuando tenemos que realizar trabajo de equipo los companeros colaboran": 0.00
+"mis companeros de trabajo me ayudan cuando tengo dificultades": 0.00
+"me informan sobre lo que hago bien en mi trabajo": 100.00
+"la forma como evaluan mi trabajo en mi centro de trabajo me ayuda a mejorar mi desempeno": 100.00
+"en mi centro de trabajo me pagan a tiempo mi salario": 100.00
+"el pago que recibo es el que merezco por el trabajo que realizo": 100.00
+"si obtengo los resultados esperados en mi trabajo me recompensan o reconocen": 100.00
+"las personas que hacen bien el trabajo pueden crecer laboralmente": 100.00
+"considero que mi trabajo es estable": 100.00
+"en mi trabajo existe continua rotacion de personal": 0.00
+"siento orgullo de laborar en este centro de trabajo": 100.00
+"me siento comprometido con mi trabajo": 100.00
+"en mi trabajo puedo expresarme libremente sin interrupciones": 100.00
+"recibo criticas constantes a mi persona y/o trabajo": 0.00
+"recibo burlas, calumnias, difamaciones, humillaciones o ridiculizaciones": 100.00
+"se ignora mi presencia o se me excluye de las reuniones de trabajo y en la toma de decisiones": 100.00
+"se manipulan las situaciones de trabajo para hacerme parecer un mal trabajador": 0.00
+"se ignoran mis exitos laborales y se atribuyen a otros trabajadores": 0.00
+"me bloquean o impiden las oportunidades que tengo para obtener ascenso o mejora en mi trabajo": 100.00
+"he presenciado actos de violencia en mi centro de trabajo": 100.00
+"en mi trabajo debo brindar servicio a clientes o usuarios": 0.00
+"1 atiendo clientes o usuarios muy enojados": 0.00
+"1 mi trabajo me exige atender personas muy necesitadas de ayuda o enfermas": 0.00
+"1 para hacer mi trabajo debo demostrar sentimientos distintos a los mios": 0.00
+"1 mi trabajo me exige atender situaciones de violencia": 100.00
+"soy jefe de otros trabajadores": 0.00
+"1 comunican tarde los asuntos de trabajo": 0.00
+"1 dificultan el logro de los resultados del trabajo": 0.00
+"1 cooperan poco cuando se necesita": 0.00
+"1 ignoran las sugerencias para mejorar su trabajo": 0.00
+
+
+--- EXPECTED KEYS (Mapped) ---
+Small: "Por la cantidad de trabajo que tengo debo quedarme tiempo adicional a mi turno." -> Large: "Por la cantidad de trabajo que tengo debo quedarme tiempo adicional a mi turno" (Cleaned: por la cantidad de trabajo que tengo debo quedarme tiempo adicional a mi turno)
+Small: "Tengo las herramientas / equipo / utensilios de trabajo necesarios para poder realizar mi trabajo adecuadamente." -> Large: "El espacio donde trabajo me permite realizar mis actividades de manera segura e higiénica" (Cleaned: el espacio donde trabajo me permite realizar mis actividades de manera segura e higienica)
+Small: "Considero que en mi trabajo me piden hacer cosas innecesarias." -> Large: "Considero que en mi trabajo me piden hacer cosas innecesarias" (Cleaned: considero que en mi trabajo me piden hacer cosas innecesarias)
+Small: "La comunicación que tiene mi Líder inmediato conmigo es clara y respetuosa." -> Large: "Mi jefe me comunica a tiempo la información relacionada con el trabajo" (Cleaned: mi jefe me comunica a tiempo la informacion relacionada con el trabajo)
+Small: "Mi Líder inmediato me provee los conocimientos y el entrenamiento que requiero para realizar mi trabajo adecuadamente." -> Large: "Recibo capacitación útil para hacer mi trabajo" (Cleaned: recibo capacitacion util para hacer mi trabajo)
+Small: "Aquí la gente es tratada justamente." -> Large: "En mi trabajo me hacen sentir parte del grupo" (Cleaned: en mi trabajo me hacen sentir parte del grupo)
+Small: "Las áreas con quien tengo contacto me hacen solicitudes de manera clara y respetuosa." -> Large: "Entre compañeros solucionamos los problemas de trabajo de forma respetuosa" (Cleaned: entre companeros solucionamos los problemas de trabajo de forma respetuosa)
+Small: "Mi Líder inmediato reconoce el trabajo bien hecho y el esfuerzo extra." -> Large: "Si obtengo los resultados esperados en mi trabajo me recompensan o reconocen" (Cleaned: si obtengo los resultados esperados en mi trabajo me recompensan o reconocen)
+Small: "Mi opinión es escuchada." -> Large: "Mi jefe tiene en cuenta mis puntos de vista y opiniones" (Cleaned: mi jefe tiene en cuenta mis puntos de vista y opiniones)
+Small: "La orientación que me da mi Líder inmediato me ayuda a realizar mejor mi trabajo." -> Large: "La orientación que me da mi jefe me ayuda a realizar mejor mi trabajo" (Cleaned: la orientacion que me da mi jefe me ayuda a realizar mejor mi trabajo)
+Small: "Los Lideres de esta propiedad toman decisiones que me ayudan a realizar mejor mi trabajo." -> Large: "Mi jefe ayuda a solucionar los problemas que se presentan en el trabajo" (Cleaned: mi jefe ayuda a solucionar los problemas que se presentan en el trabajo)
+Small: "Considero que Princess Mundo Imperial es un buen lugar para trabajar." -> Large: "Considero que mi trabajo es estable" (Cleaned: considero que mi trabajo es estable)
+Small: "Me siento orgulloso de trabajar en Princess Mundo Imperial." -> Large: "Siento orgullo de laborar en este centro de trabajo" (Cleaned: siento orgullo de laborar en este centro de trabajo)
+Small: "Recomendaría Princess Mundo Imperial a otros para trabajar." -> Large: "En mi trabajo existe continua rotación de personal" (Cleaned: en mi trabajo existe continua rotacion de personal)
+Small: "mi lider me brinda herramientas para poder tomar decisiones" -> NO MAPPING FOUND
+Small: "En Princess Mundo Imperial se preocupan por mi bienestar." -> Large: "Considero que el tiempo en el trabajo es mucho y perjudica mis actividades familiares o personales" (Cleaned: considero que el tiempo en el trabajo es mucho y perjudica mis actividades familiares o personales)
