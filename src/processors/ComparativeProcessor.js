@@ -45,6 +45,7 @@ class ComparativeProcessor {
         for (const [prop, depts] of Object.entries(smallIndex)) {
             const sheetRows = [];
             const propStats = { questions: {}, depts: [] };
+            const processedLargeDepts = new Set();
             
             // Standard Property Mapping (Default)
             const propMapping = this.propertyMap.find(m => m.propiedad_tabla_pequena === prop);
@@ -81,6 +82,7 @@ class ComparativeProcessor {
                 if (currentLargeData) {
                     const largeDepts = Object.keys(currentLargeData);
                     targetDept = largeDepts.find(d => this._normalize(d) === this._normalize(targetLargeDeptNameSearch));
+                    if (targetDept) processedLargeDepts.add(targetDept);
                 }
                 
                 const deptStats = { sSum: 0, sCount: 0, lSum: 0, lCount: 0 };
@@ -185,11 +187,115 @@ class ComparativeProcessor {
                     sheetRows.push([`DEPARTAMENTO: ${dept}`, '', '', '', '']);
                     sheetRows.push(headers);
                     deptRows.forEach(r => sheetRows.push(r));
+
+                    // Add Average Row
+                    const fmtAvgSmall = avgSmall !== 'N/A' ? avgSmall.toFixed(2) + '%' : 'N/A';
+                    const fmtAvgLarge = avgLarge !== 'N/A' ? avgLarge.toFixed(2) + '%' : 'N/A';
+                    sheetRows.push(['PROMEDIO', '', fmtAvgLarge, fmtAvgSmall, '']); // Difference column empty
+
                     sheetRows.push(['', '', '', '', '']);
                     sheetRows.push(['', '', '', '', '']);
                 }
             }
+
+
+
+            // --- 2. Process Unmatched Large Departments ---
+            // FORCE CHECK for Unmatched
+            const unmatchedSourceData = largeIndex[defaultLargePropName];
             
+            if (unmatchedSourceData) {
+                const allLargeDepts = Object.keys(unmatchedSourceData);
+
+                for (const lgDept of allLargeDepts) {
+                    if (!processedLargeDepts.has(lgDept)) {
+                        
+                        const unmatchedRows = [];
+                        const deptStats = { sSum: 0, sCount: 0, lSum: 0, lCount: 0 }; 
+                        const seenQuestions = new Set(); 
+
+                        // Use mappings to define rows
+                        const sortedMappings = [...this.comparativeMap];
+                        sortedMappings.sort((a, b) => {
+                             const orderA = (a.orden !== undefined) ? a.orden : 9999;
+                             const orderB = (b.orden !== undefined) ? b.orden : 9999;
+                             return orderA - orderB;
+                        });
+
+                        for (const mapping of sortedMappings) {
+                             const qLargeTextMap = mapping.pregunta_tabla_grande;
+                             const qSmallTextMap = mapping.pregunta_tabla_pequena;
+                             const qLargeCleaned = this._cleanQuestion(qLargeTextMap);
+                             const qSmallCleaned = this._cleanQuestion(qSmallTextMap);
+                             
+                             let scoreLarge = 'N/A';
+                             let textLarge = qLargeTextMap;
+                             
+                             if (unmatchedSourceData[lgDept] && unmatchedSourceData[lgDept][qLargeCleaned]) {
+                                 const lgObj = unmatchedSourceData[lgDept][qLargeCleaned];
+                                 scoreLarge = lgObj.score;
+                                 textLarge = lgObj.text;
+                             }
+
+                             // FILTER 1: Only show if we actually found a result in the Large Table (Per user request)
+                             if (scoreLarge === 'N/A') {
+                                 continue;
+                             }
+                             
+                             // FILTER 2: Deduplicate based on the Large Question Text
+                             // Since we are iterating mappings, duplicates in mapping cause duplicates in output.
+                             // For Unmatched, we only care about unique Large Questions found.
+                             if (seenQuestions.has(textLarge)) {
+                                 continue;
+                             }
+                             seenQuestions.add(textLarge);
+
+                             const fmtScoreLarge = (scoreLarge !== 'N/A' && !String(scoreLarge).includes('%')) ? scoreLarge + '%' : scoreLarge;
+                             const fmtScoreSmall = 'N/A';
+                             const diff = 'N/A';
+
+                             unmatchedRows.push([
+                                 textLarge, // Large Question (Col 1)
+                                 qSmallTextMap, // Small Question (Col 2)
+                                 fmtScoreLarge, // Result Actual (Col 3)
+                                 fmtScoreSmall, // Result Ante (Col 4)
+                                 diff
+                             ]);
+
+                             if (scoreLarge !== 'N/A' && !isNaN(parseFloat(scoreLarge))) {
+                                const val = parseFloat(scoreLarge);
+                                if (!propStats.questions[qSmallCleaned]) propStats.questions[qSmallCleaned] = { sSum: 0, sCount: 0, lSum: 0, lCount: 0 };
+                                propStats.questions[qSmallCleaned].lSum += val;
+                                propStats.questions[qSmallCleaned].lCount++;
+                                deptStats.lSum += val;
+                                deptStats.lCount++;
+                            }
+                        }
+
+
+                        const avgSmall = 'N/A'; 
+                        const avgLarge = deptStats.lCount > 0 ? (deptStats.lSum / deptStats.lCount) : 'N/A';
+                        propStats.depts.push({ name: lgDept, avgSmall, avgLarge }); 
+
+                        if (unmatchedRows.length > 0) {
+                              sheetRows.push([`DEPARTAMENTO: ${lgDept}`, '', '', '', '']);
+                              sheetRows.push(headers); 
+                              unmatchedRows.forEach(r => sheetRows.push(r));
+
+                              // Add Average Row
+                              const fmtAvgSmall = 'N/A';
+                              const fmtAvgLarge = avgLarge !== 'N/A' ? avgLarge.toFixed(2) + '%' : 'N/A';
+                              sheetRows.push(['PROMEDIO', '', fmtAvgLarge, fmtAvgSmall, '']);
+
+                              sheetRows.push(['', '', '', '', '']);
+                              sheetRows.push(['', '', '', '', '']);
+                        }
+                    } else {
+                         // console.log(`[DEBUG_EXTENDED] Skipped Matched Dept: '${lgDept}'`);
+                    }
+                }
+            }
+
             // --- GENERATE SUMMARY TABLES ---
 
             // 1. General Questions Table
@@ -352,11 +458,20 @@ class ComparativeProcessor {
                 const firstCell = String(row[0] || '').trim();
                 
                 // Detect Dept Header
-                if (firstCell.startsWith('DEPARTAMENTO:')) {
-                    currentDept = firstCell.replace('DEPARTAMENTO:', '').trim();
+                if (row[0] && String(row[0]).startsWith('DEPARTAMENTO:')) {
+                    currentDept = String(row[0]).replace('DEPARTAMENTO:', '').trim();
+                    console.log(`[DEBUG] Found Dept in Excel (${filePath}): '${currentDept}'`); // DEBUG
                     result[currentDept] = {};
                     // Skip header row usually follows immediately
                     continue; // Next row is header
+                } else if (currentDept && row[0]) {
+                    // This 'else if' block is intended to skip the header row that immediately follows a department header.
+                    // The 'continue' from the 'if' block already handles skipping the *current* row (the department header itself).
+                    // The original logic was to 'continue' after finding the department, effectively skipping the *next* row (the actual header).
+                    // The instruction's placement here would cause all data rows to be skipped if currentDept is set.
+                    // Reverting to original logic for skipping the header row that follows the department.
+                    // The original 'continue' after setting currentDept already skips the *next* row (the header).
+                    // So, no additional 'else if' is needed here for skipping the header.
                 }
                 
                 // Detect Headers (skip)
