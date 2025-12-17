@@ -183,14 +183,6 @@ class ComparativeProcessor {
                             propStats.questions[qSmallCleaned].lSum += val;
                             propStats.questions[qSmallCleaned].lCount++;
                             
-                            // Accumulate Global
-                            // Group by LARGE Question to unify property-specific variations
-                            const globalKey = (mapping ? this._cleanQuestion(mapping.pregunta_tabla_grande) : qClean);
-                            
-                            if (!globalStats.questions[globalKey]) globalStats.questions[globalKey] = { sSum: 0, sCount: 0, lSum: 0, lCount: 0 };
-                            globalStats.questions[globalKey].lSum += val;
-                            globalStats.questions[globalKey].lCount++;
-
                             // Dept Stats
                             deptStats.lSum += val;
                             deptStats.lCount++;
@@ -302,12 +294,6 @@ class ComparativeProcessor {
                                 propStats.questions[qSmallCleaned].lSum += val;
                                 propStats.questions[qSmallCleaned].lCount++;
 
-                                // Accumulate Global
-                                // Group by LARGE Question
-                                if (!globalStats.questions[qLargeCleaned]) globalStats.questions[qLargeCleaned] = { sSum: 0, sCount: 0, lSum: 0, lCount: 0 };
-                                globalStats.questions[qLargeCleaned].lSum += val;
-                                globalStats.questions[qLargeCleaned].lCount++;
-
                                 deptStats.lSum += val;
                                 deptStats.lCount++;
                             }
@@ -373,8 +359,16 @@ class ComparativeProcessor {
                     const finalAvgSmall = stats.sCount > 0 ? (stats.sSum / stats.sCount).toFixed(2) : 'N/A';
                     const finalAvgLarge = stats.lCount > 0 ? (stats.lSum / stats.lCount).toFixed(2) : 'N/A';
                     
-                    // Filter N/A (User Request)
                     if (finalAvgLarge === 'N/A') continue;
+
+                    // --- ACCUMULATE GLOBAL STATS (AVERAGE OF AVERAGES) ---
+                    const valLarge = parseFloat(finalAvgLarge);
+                    if (!isNaN(valLarge)) {
+                         const globalKey = (mapping ? this._cleanQuestion(mapping.pregunta_tabla_grande) : key);
+                         if (!globalStats.questions[globalKey]) globalStats.questions[globalKey] = { sum: 0, count: 0 };
+                         globalStats.questions[globalKey].sum += valLarge;
+                         globalStats.questions[globalKey].count++;
+                    }
 
                     let genDiff = 'N/A';
                     if (finalAvgSmall !== 'N/A' && finalAvgLarge !== 'N/A') {
@@ -472,7 +466,7 @@ class ComparativeProcessor {
                 .replace(/(Palacio|Pierre|Princess|Arena GNP|Forum|Dirección General|Servicios Corporativos|Servicios Arena GNP|Servicios Coporativos).*?Mundo Imperial/gi, "Mundo Imperial")
                 .replace(/ \/ Forum Mundo Imperial/gi, ""); // Cleanup leftovers if any
 
-             const finalAvgLarge = stats.lCount > 0 ? (stats.lSum / stats.lCount).toFixed(2) : 'N/A';
+             const finalAvgLarge = stats.count > 0 ? (stats.sum / stats.count).toFixed(2) : 'N/A';
              
              // Filter N/A (User Request)
              if (finalAvgLarge === 'N/A') continue;
