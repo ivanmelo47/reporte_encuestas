@@ -40,7 +40,7 @@ class ComparativeProcessor {
 
         // 4. Build Comparison Report per Property
         const sheets = {};
-        const headers = ['Pregunta', 'Resultado Grande', 'Resultado Pequeña', 'Diferencia'];
+        const headers = ['Pregunta Tabla Grande', 'Pregunta Tabla Pequeña', 'Resultado Grande', 'Resultado Pequeña', 'Diferencia'];
 
         for (const [prop, depts] of Object.entries(smallIndex)) {
             const sheetRows = [];
@@ -64,6 +64,7 @@ class ComparativeProcessor {
                 if (deptMapping) {
                     targetLargePropName = deptMapping.propiedad_tabla_grande;
                     targetLargeDeptNameSearch = deptMapping.departamento_tabla_grande;
+                    // console.log(`[Override] Mapping '${dept}' in '${prop}' -> '${targetLargeDeptNameSearch}' in '${targetLargePropName}'`);
                 }
                 
                 // --- END Specific Department Mapping Logic ---
@@ -112,21 +113,40 @@ class ComparativeProcessor {
                              const nSmall = parseFloat(scoreSmall);
                              const nLarge = parseFloat(scoreLarge);
                              if (!isNaN(nSmall) && !isNaN(nLarge)) {
-                                 diff = (nLarge - nSmall).toFixed(2) + '%';
+                                 diff = (nSmall - nLarge).toFixed(2);
                              }
                         }
-
-                        // Output Row (Strictly Mapped)
-                        deptRows.push([
-                            mapping.pregunta_tabla_pequena, // Use Mapped Text
-                            (scoreLarge !== 'N/A' && !String(scoreLarge).includes('%')) ? scoreLarge + '%' : scoreLarge,
-                            (scoreSmall !== 'N/A' && !String(scoreSmall).includes('%')) ? scoreSmall + '%' : scoreSmall,
-                            diff
-                        ]);
                     }
+
+                    // Output Row (Small Table Order)
+                    // If no mapping exists, we still print it but with Empty Large Data
+                    deptRows.push([
+                        textLarge, // Large Question (Col 1)
+                        mapping ? mapping.pregunta_tabla_pequena : qSmallCleaned, // Small Question (Col 2)
+                        scoreLarge, // Res Large (Col 3)
+                        scoreSmall, // Res Small (Col 4)
+                        diff
+                    ]);
                 }
-                
-                // Unused Large Questions Logic REMOVED per user request (Strict Mapping)
+
+                // 2. Process Remaining (Unused) Large Questions
+                // Append Large questions that were NOT matched by any Small Question
+                if (targetDept && currentLargeData[targetDept]) {
+                    const allLargeKeys = Object.keys(currentLargeData[targetDept]);
+                    allLargeKeys.forEach(key => {
+                        if (!usedLargeKeys.has(key)) {
+                            const lgObj = currentLargeData[targetDept][key];
+                            // Row: Large Q | Score | --- | N/A | N/A
+                            deptRows.push([
+                                lgObj.text,
+                                '---', // Missing Small Question (Col 2)
+                                lgObj.score,
+                                'N/A',
+                                'N/A'
+                            ]);
+                        }
+                    });
+                }
 
                 if (deptRows.length > 0) {
                     sheetRows.push([`DEPARTAMENTO: ${dept}`, '', '', '', '']);
