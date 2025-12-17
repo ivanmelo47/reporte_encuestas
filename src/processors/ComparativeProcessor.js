@@ -40,7 +40,7 @@ class ComparativeProcessor {
 
         // 4. Build Comparison Report per Property
         const sheets = {};
-        const headers = ['Pregunta Tabla Grande', 'Pregunta Tabla Pequeña', 'Resultado Grande', 'Resultado Pequeña', 'Diferencia'];
+        const headers = ['Pregunta Tabla Grande', 'Pregunta Tabla Pequeña', 'Resultado Actual', 'Resultado Anterior', 'Diferencia'];
 
         for (const [prop, depts] of Object.entries(smallIndex)) {
             const sheetRows = [];
@@ -82,8 +82,23 @@ class ComparativeProcessor {
                     targetDept = largeDepts.find(d => this._normalize(d) === this._normalize(targetLargeDeptNameSearch));
                 }
 
-                // 1. Process Small Table Order (Primary)
-                for (const [qSmallCleaned, scoreSmall] of Object.entries(questions)) {
+                // 1. Process Small Table Order (Primary) - SORTED BY 'ORDEN'
+                const smallQuestionEntries = Object.entries(questions);
+                
+                smallQuestionEntries.sort((a, b) => {
+                    const qA = a[0]; // Cleaned Question A
+                    const qB = b[0]; // Cleaned Question B
+                    
+                    const mapA = this.comparativeMap.find(m => this._cleanQuestion(m.pregunta_tabla_pequena) === qA);
+                    const mapB = this.comparativeMap.find(m => this._cleanQuestion(m.pregunta_tabla_pequena) === qB);
+                    
+                    const orderA = (mapA && mapA.orden !== undefined) ? mapA.orden : 9999;
+                    const orderB = (mapB && mapB.orden !== undefined) ? mapB.orden : 9999;
+                    
+                    return orderA - orderB;
+                });
+
+                for (const [qSmallCleaned, scoreSmall] of smallQuestionEntries) {
                     // Find mapping
                     const mapping = this.comparativeMap.find(m => this._cleanQuestion(m.pregunta_tabla_pequena) === qSmallCleaned);
                     
@@ -113,40 +128,31 @@ class ComparativeProcessor {
                              const nSmall = parseFloat(scoreSmall);
                              const nLarge = parseFloat(scoreLarge);
                              if (!isNaN(nSmall) && !isNaN(nLarge)) {
-                                 diff = (nSmall - nLarge).toFixed(2);
+                                 // Difference: Large - Small
+                                 diff = (nLarge - nSmall).toFixed(2) + '%';
                              }
                         }
                     }
 
+                    // Format scores as percentages if they are numbers
+                    const fmtScoreLarge = (scoreLarge !== 'N/A' && !String(scoreLarge).includes('%')) ? scoreLarge + '%' : scoreLarge;
+                    const fmtScoreSmall = (scoreSmall !== 'N/A' && !String(scoreSmall).includes('%')) ? scoreSmall + '%' : scoreSmall;
+
                     // Output Row (Small Table Order)
-                    // If no mapping exists, we still print it but with Empty Large Data
-                    deptRows.push([
-                        textLarge, // Large Question (Col 1)
-                        mapping ? mapping.pregunta_tabla_pequena : qSmallCleaned, // Small Question (Col 2)
-                        scoreLarge, // Res Large (Col 3)
-                        scoreSmall, // Res Small (Col 4)
-                        diff
-                    ]);
+                    // Only show if mapping exists (User Request)
+                    if (mapping) {
+                        deptRows.push([
+                            textLarge, // Large Question (Col 1)
+                            mapping.pregunta_tabla_pequena, // Small Question (Col 2)
+                            fmtScoreLarge, // Res Actual (Col 3)
+                            fmtScoreSmall, // Res Anterior (Col 4)
+                            diff
+                        ]);
+                    }
                 }
 
-                // 2. Process Remaining (Unused) Large Questions
-                // Append Large questions that were NOT matched by any Small Question
-                if (targetDept && currentLargeData[targetDept]) {
-                    const allLargeKeys = Object.keys(currentLargeData[targetDept]);
-                    allLargeKeys.forEach(key => {
-                        if (!usedLargeKeys.has(key)) {
-                            const lgObj = currentLargeData[targetDept][key];
-                            // Row: Large Q | Score | --- | N/A | N/A
-                            deptRows.push([
-                                lgObj.text,
-                                '---', // Missing Small Question (Col 2)
-                                lgObj.score,
-                                'N/A',
-                                'N/A'
-                            ]);
-                        }
-                    });
-                }
+                // 2. Process Remaining (Unused) Large Questions - REMOVED per user request
+                // Only showing mapped questions.
 
                 if (deptRows.length > 0) {
                     sheetRows.push([`DEPARTAMENTO: ${dept}`, '', '', '', '']);
