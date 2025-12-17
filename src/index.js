@@ -106,7 +106,7 @@ async function main() {
 
                 const result = processor.process(config);
                 const savePath = path.join(OUTPUT_DIR, result.outputName);
-                ExcelWriter.write(result.sheets, savePath);
+                await ExcelWriter.writeComparativeReport(result.sheets, savePath);
                 console.log(`Saved: ${result.outputName}`);
             }
         } catch (error) {
