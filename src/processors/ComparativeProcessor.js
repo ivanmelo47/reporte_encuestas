@@ -41,6 +41,9 @@ class ComparativeProcessor {
         // 4. Build Comparison Report per Property
         const sheets = {};
         const headers = ['Pregunta Tabla Grande', 'Pregunta', 'Resultado Actual', 'Resultado Anterior', 'Diferencia'];
+        
+        const globalStats = { questions: {} }; // Init Global Stats
+        const allPropertySummaries = []; // Init Capture for Global Sheet
 
         for (const [prop, depts] of Object.entries(smallIndex)) {
             const sheetRows = [];
@@ -50,6 +53,15 @@ class ComparativeProcessor {
             // Standard Property Mapping (Default)
             const propMapping = this.propertyMap.find(m => m.propiedad_tabla_pequena === prop);
             const defaultLargePropName = propMapping ? propMapping.propiedad_tabla_grande : prop;
+            
+            // Collect Valid Questions for this Property (from Small Data)
+            // This prevents "Palacio" questions from appearing in "Princess" reports during Unmatched processing
+            const validSmallQuestions = new Set();
+            for (const questions of Object.values(depts)) {
+                for (const q of Object.keys(questions)) {
+                    validSmallQuestions.add(q);
+                }
+            }
             
             for (const [dept, questions] of Object.entries(depts)) {
                 
@@ -170,6 +182,15 @@ class ComparativeProcessor {
                             if (!propStats.questions[qSmallCleaned]) propStats.questions[qSmallCleaned] = { sSum: 0, sCount: 0, lSum: 0, lCount: 0 };
                             propStats.questions[qSmallCleaned].lSum += val;
                             propStats.questions[qSmallCleaned].lCount++;
+                            
+                            // Accumulate Global
+                            // Group by LARGE Question to unify property-specific variations
+                            const globalKey = (mapping ? this._cleanQuestion(mapping.pregunta_tabla_grande) : qClean);
+                            
+                            if (!globalStats.questions[globalKey]) globalStats.questions[globalKey] = { sSum: 0, sCount: 0, lSum: 0, lCount: 0 };
+                            globalStats.questions[globalKey].lSum += val;
+                            globalStats.questions[globalKey].lCount++;
+
                             // Dept Stats
                             deptStats.lSum += val;
                             deptStats.lCount++;
@@ -230,6 +251,12 @@ class ComparativeProcessor {
                         });
 
                         for (const mapping of sortedMappings) {
+                             // FILTER 0: Context Check
+                             // specific questions for other properties should not appear here.
+                             if (validSmallQuestions.size > 0 && !validSmallQuestions.has(mapping.pregunta_tabla_pequena)) {
+                                 continue;
+                             }
+
                              const qLargeTextMap = mapping.pregunta_tabla_grande;
                              const qSmallTextMap = mapping.pregunta_tabla_pequena;
                              const qLargeCleaned = this._cleanQuestion(qLargeTextMap);
@@ -274,6 +301,13 @@ class ComparativeProcessor {
                                 if (!propStats.questions[qSmallCleaned]) propStats.questions[qSmallCleaned] = { sSum: 0, sCount: 0, lSum: 0, lCount: 0 };
                                 propStats.questions[qSmallCleaned].lSum += val;
                                 propStats.questions[qSmallCleaned].lCount++;
+
+                                // Accumulate Global
+                                // Group by LARGE Question
+                                if (!globalStats.questions[qLargeCleaned]) globalStats.questions[qLargeCleaned] = { sSum: 0, sCount: 0, lSum: 0, lCount: 0 };
+                                globalStats.questions[qLargeCleaned].lSum += val;
+                                globalStats.questions[qLargeCleaned].lCount++;
+
                                 deptStats.lSum += val;
                                 deptStats.lCount++;
                             }
@@ -313,10 +347,11 @@ class ComparativeProcessor {
 
             // 1. General Questions Table
             if (Object.keys(propStats.questions).length > 0) {
+                // ... (Existing Property Sheet Logic) ...
                 sheetRows.push(['RESUMEN GENERAL POR PREGUNTA', '', '', '', '']);
                 sheetRows.push(headers);
 
-                // Sort using same logic as Detail
+                // Sort
                  const summaryQEntries = Object.entries(propStats.questions);
                  summaryQEntries.sort((a, b) => {
                     const qA = a[0]; 
@@ -328,6 +363,8 @@ class ComparativeProcessor {
                     return orderA - orderB;
                 });
 
+                const propGlobalRows = []; // Rows for the Global Sheet (Simple format)
+
                 for (const [key, stats] of summaryQEntries) {
                     const mapping = this.comparativeMap.find(m => this._cleanQuestion(m.pregunta_tabla_pequena) === key);
                     const qSmallText = mapping ? mapping.pregunta_tabla_pequena : key;
@@ -335,8 +372,11 @@ class ComparativeProcessor {
 
                     const finalAvgSmall = stats.sCount > 0 ? (stats.sSum / stats.sCount).toFixed(2) : 'N/A';
                     const finalAvgLarge = stats.lCount > 0 ? (stats.lSum / stats.lCount).toFixed(2) : 'N/A';
-                    let genDiff = 'N/A';
                     
+                    // Filter N/A (User Request)
+                    if (finalAvgLarge === 'N/A') continue;
+
+                    let genDiff = 'N/A';
                     if (finalAvgSmall !== 'N/A' && finalAvgLarge !== 'N/A') {
                         genDiff = (parseFloat(finalAvgLarge) - parseFloat(finalAvgSmall)).toFixed(2) + '%';
                     }
@@ -344,8 +384,17 @@ class ComparativeProcessor {
                     const fmtS = finalAvgSmall !== 'N/A' ? finalAvgSmall + '%' : 'N/A';
                     const fmtL = finalAvgLarge !== 'N/A' ? finalAvgLarge + '%' : 'N/A';
 
+                    // Add to Property Sheet (Full 5 Cols)
                     sheetRows.push([qLargeText, qSmallText, fmtL, fmtS, genDiff]);
+                    
+                    // Add to Global Capture (3 Cols)
+                    propGlobalRows.push([qLargeText, qSmallText, fmtL]);
                 }
+                
+                if (propGlobalRows.length > 0) {
+                    allPropertySummaries.push({ propName: prop, rows: propGlobalRows });
+                }
+
                 sheetRows.push(['', '', '', '', '']);
                 sheetRows.push(['', '', '', '', '']);
             }
@@ -388,6 +437,67 @@ class ComparativeProcessor {
                 sheets[safeName] = { data: sheetRows, cols: this.colWidths };
             }
         }
+
+        // --- GLOBAL SHEET GENERATION ---
+        const globalRows = [];
+        globalRows.push(['RESUMEN GLOBAL (TODAS LAS PROPIEDADES)', '', '', '', '']);
+        const globalHeaders = ['Pregunta Tabla Grande', 'Pregunta', 'Resultado Actual'];
+        globalRows.push(globalHeaders);
+
+        // Sort Global Questions
+        const globalEntries = Object.entries(globalStats.questions);
+        globalEntries.sort((a, b) => {
+             const qCleanA = a[0]; 
+             const qCleanB = b[0]; 
+             // Find mapping by LARGE question now
+             const mapA = this.comparativeMap.find(m => this._cleanQuestion(m.pregunta_tabla_grande) === qCleanA);
+             const mapB = this.comparativeMap.find(m => this._cleanQuestion(m.pregunta_tabla_grande) === qCleanB);
+             
+             const orderA = (mapA && mapA.orden !== undefined) ? mapA.orden : 9999;
+             const orderB = (mapB && mapB.orden !== undefined) ? mapB.orden : 9999;
+             return orderA - orderB;
+        });
+
+        for (const [key, stats] of globalEntries) {
+             // Find mapping by LARGE Question Key
+             const mapping = this.comparativeMap.find(m => this._cleanQuestion(m.pregunta_tabla_grande) === key);
+             
+             let qSmallText = mapping ? mapping.pregunta_tabla_pequena : key;
+             const qLargeText = mapping ? mapping.pregunta_tabla_grande : '---';
+
+             // GENERALIZE Small Question Text for Global View
+             // Replace specific Property names with generic "Mundo Imperial" or "esta propiedad"
+             qSmallText = qSmallText
+                .replace(/Palacio MI/gi, "Mundo Imperial")
+                .replace(/(Palacio|Pierre|Princess|Arena GNP|Forum|Dirección General|Servicios Corporativos|Servicios Arena GNP|Servicios Coporativos).*?Mundo Imperial/gi, "Mundo Imperial")
+                .replace(/ \/ Forum Mundo Imperial/gi, ""); // Cleanup leftovers if any
+
+             const finalAvgLarge = stats.lCount > 0 ? (stats.lSum / stats.lCount).toFixed(2) : 'N/A';
+             
+             // Filter N/A (User Request)
+             if (finalAvgLarge === 'N/A') continue;
+
+             const fmtL = finalAvgLarge !== 'N/A' ? finalAvgLarge + '%' : 'N/A';
+
+             // Only requested columns
+             globalRows.push([qLargeText, qSmallText, fmtL]);
+        }
+        
+        // Append Individual Property Summaries
+        if (allPropertySummaries.length > 0) {
+            globalRows.push(['', '', '']);
+            globalRows.push(['', '', '']);
+            
+            allPropertySummaries.forEach(item => {
+                globalRows.push([`RESUMEN: ${item.propName.toUpperCase()}`, '', '']);
+                globalRows.push(globalHeaders);
+                item.rows.forEach(r => globalRows.push(r));
+                globalRows.push(['', '', '']); // Spacing
+            });
+        }
+        
+        sheets['Global'] = { data: globalRows, cols: this.colWidths };
+
 
         return {
             outputName: 'Reporte_Comparativo.xlsx',
