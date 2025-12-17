@@ -317,17 +317,15 @@ class ComparativeProcessor {
                 sheetRows.push(headers);
 
                 // Sort using same logic as Detail
-                // Sort by "Resultado Actual" (Large Table) Descending
                  const summaryQEntries = Object.entries(propStats.questions);
                  summaryQEntries.sort((a, b) => {
-                    const statsA = a[1];
-                    const statsB = b[1];
-                    // Calculate averages (0 if count is 0 or missing to put at bottom)
-                    // Wait, usually results are 0-100. If missing, treat as -1 to put at very bottom? 
-                    // Or 0? If scores are 0-100, -1 is safe.
-                    const avgA = statsA.lCount > 0 ? (statsA.lSum / statsA.lCount) : -1;
-                    const avgB = statsB.lCount > 0 ? (statsB.lSum / statsB.lCount) : -1;
-                    return avgB - avgA; // Descending
+                    const qA = a[0]; 
+                    const qB = b[0]; 
+                    const mapA = this.comparativeMap.find(m => this._cleanQuestion(m.pregunta_tabla_pequena) === qA);
+                    const mapB = this.comparativeMap.find(m => this._cleanQuestion(m.pregunta_tabla_pequena) === qB);
+                    const orderA = (mapA && mapA.orden !== undefined) ? mapA.orden : 9999;
+                    const orderB = (mapB && mapB.orden !== undefined) ? mapB.orden : 9999;
+                    return orderA - orderB;
                 });
 
                 for (const [key, stats] of summaryQEntries) {
