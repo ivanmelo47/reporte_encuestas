@@ -44,6 +44,7 @@ class ComparativeProcessor {
 
         for (const [prop, depts] of Object.entries(smallIndex)) {
             const sheetRows = [];
+            const propStats = { questions: {}, depts: [] };
             
             // Standard Property Mapping (Default)
             const propMapping = this.propertyMap.find(m => m.propiedad_tabla_pequena === prop);
@@ -81,6 +82,8 @@ class ComparativeProcessor {
                     const largeDepts = Object.keys(currentLargeData);
                     targetDept = largeDepts.find(d => this._normalize(d) === this._normalize(targetLargeDeptNameSearch));
                 }
+                
+                const deptStats = { sSum: 0, sCount: 0, lSum: 0, lCount: 0 };
 
                 // 1. Process Small Table Order (Primary) - SORTED BY 'ORDEN'
                 const smallQuestionEntries = Object.entries(questions);
@@ -138,7 +141,6 @@ class ComparativeProcessor {
                     const fmtScoreLarge = (scoreLarge !== 'N/A' && !String(scoreLarge).includes('%')) ? scoreLarge + '%' : scoreLarge;
                     const fmtScoreSmall = (scoreSmall !== 'N/A' && !String(scoreSmall).includes('%')) ? scoreSmall + '%' : scoreSmall;
 
-                    // Output Row (Small Table Order)
                     // Only show if mapping exists (User Request)
                     if (mapping) {
                         deptRows.push([
@@ -148,11 +150,36 @@ class ComparativeProcessor {
                             fmtScoreSmall, // Res Anterior (Col 4)
                             diff
                         ]);
+
+                        // --- AGGREGATION LOGIC ---
+                        if (scoreSmall !== 'N/A' && !isNaN(parseFloat(scoreSmall))) {
+                            const val = parseFloat(scoreSmall);
+                            // Question Stats
+                            if (!propStats.questions[qSmallCleaned]) propStats.questions[qSmallCleaned] = { sSum: 0, sCount: 0, lSum: 0, lCount: 0 };
+                            propStats.questions[qSmallCleaned].sSum += val;
+                            propStats.questions[qSmallCleaned].sCount++;
+                            // Dept Stats
+                            deptStats.sSum += val;
+                            deptStats.sCount++;
+                        }
+                        if (scoreLarge !== 'N/A' && !isNaN(parseFloat(scoreLarge))) {
+                            const val = parseFloat(scoreLarge);
+                            // Question Stats
+                            if (!propStats.questions[qSmallCleaned]) propStats.questions[qSmallCleaned] = { sSum: 0, sCount: 0, lSum: 0, lCount: 0 };
+                            propStats.questions[qSmallCleaned].lSum += val;
+                            propStats.questions[qSmallCleaned].lCount++;
+                            // Dept Stats
+                            deptStats.lSum += val;
+                            deptStats.lCount++;
+                        }
                     }
                 }
 
-                // 2. Process Remaining (Unused) Large Questions - REMOVED per user request
-                // Only showing mapped questions.
+                // Store Dept Averages
+                const avgSmall = deptStats.sCount > 0 ? (deptStats.sSum / deptStats.sCount) : 'N/A';
+                const avgLarge = deptStats.lCount > 0 ? (deptStats.lSum / deptStats.lCount) : 'N/A';
+                propStats.depts.push({ name: dept, avgSmall, avgLarge });
+
 
                 if (deptRows.length > 0) {
                     sheetRows.push([`DEPARTAMENTO: ${dept}`, '', '', '', '']);
@@ -161,6 +188,80 @@ class ComparativeProcessor {
                     sheetRows.push(['', '', '', '', '']);
                     sheetRows.push(['', '', '', '', '']);
                 }
+            }
+            
+            // --- GENERATE SUMMARY TABLES ---
+
+            // 1. General Questions Table
+            if (Object.keys(propStats.questions).length > 0) {
+                sheetRows.push(['RESUMEN GENERAL POR PREGUNTA', '', '', '', '']);
+                sheetRows.push(headers);
+
+                // Sort using same logic as Detail
+                 const summaryQEntries = Object.entries(propStats.questions);
+                 summaryQEntries.sort((a, b) => {
+                    const qA = a[0]; 
+                    const qB = b[0]; 
+                    const mapA = this.comparativeMap.find(m => this._cleanQuestion(m.pregunta_tabla_pequena) === qA);
+                    const mapB = this.comparativeMap.find(m => this._cleanQuestion(m.pregunta_tabla_pequena) === qB);
+                    const orderA = (mapA && mapA.orden !== undefined) ? mapA.orden : 9999;
+                    const orderB = (mapB && mapB.orden !== undefined) ? mapB.orden : 9999;
+                    return orderA - orderB;
+                });
+
+                for (const [key, stats] of summaryQEntries) {
+                    const mapping = this.comparativeMap.find(m => this._cleanQuestion(m.pregunta_tabla_pequena) === key);
+                    const qSmallText = mapping ? mapping.pregunta_tabla_pequena : key;
+                    const qLargeText = mapping ? mapping.pregunta_tabla_grande : '---';
+
+                    const finalAvgSmall = stats.sCount > 0 ? (stats.sSum / stats.sCount).toFixed(2) : 'N/A';
+                    const finalAvgLarge = stats.lCount > 0 ? (stats.lSum / stats.lCount).toFixed(2) : 'N/A';
+                    let genDiff = 'N/A';
+                    
+                    if (finalAvgSmall !== 'N/A' && finalAvgLarge !== 'N/A') {
+                        genDiff = (parseFloat(finalAvgLarge) - parseFloat(finalAvgSmall)).toFixed(2) + '%';
+                    }
+                    
+                    const fmtS = finalAvgSmall !== 'N/A' ? finalAvgSmall + '%' : 'N/A';
+                    const fmtL = finalAvgLarge !== 'N/A' ? finalAvgLarge + '%' : 'N/A';
+
+                    sheetRows.push([qLargeText, qSmallText, fmtL, fmtS, genDiff]);
+                }
+                sheetRows.push(['', '', '', '', '']);
+                sheetRows.push(['', '', '', '', '']);
+            }
+
+            // 2. General Departments Table
+            if (propStats.depts.length > 0) {
+                 sheetRows.push(['RESUMEN GENERAL POR DEPARTAMENTO', '', '', '', '']);
+                 sheetRows.push(headers); // Reuse headers but Q columns will hold Dept Name
+
+                 propStats.depts.forEach(d => {
+                    let diff = 'N/A';
+                    const s = d.avgSmall;
+                    const l = d.avgLarge;
+                    
+                    if (s !== 'N/A' && l !== 'N/A') {
+                        diff = (l - s).toFixed(2) + '%';
+                    }
+
+                    const fmtS = s !== 'N/A' ? s.toFixed(2) + '%' : 'N/A';
+                    const fmtL = l !== 'N/A' ? l.toFixed(2) + '%' : 'N/A';
+
+                    // Using 'headers' columns:
+                    // Col 1 (Q Large) -> Dept Name
+                    // Col 2 (Q Small) -> Dept Name (Repeated or empty?) - User said "same columns". 
+                    // Let's put Dept Name in both or just First. I'll put in First and "---" in second.
+                    
+                    sheetRows.push([
+                        d.name,
+                        d.name, // Repeating name for clarity if user strictly wants 2 cols. 
+                        fmtL,
+                        fmtS,
+                        diff
+                    ]);
+                 });
+                 sheetRows.push(['', '', '', '', '']);
             }
 
             if (sheetRows.length > 0) {
