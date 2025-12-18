@@ -31,24 +31,6 @@
       "departamento_tabla_pequena": "Administración y Contabilidad",
       "propiedad_tabla_grande": "Arena GNP Seguros",
       "departamento_tabla_grande": "Contabilidad"
-    },
-    {
-      "propiedad_tabla_pequena": "Princess Mundo Imperial",
-      "departamento_tabla_pequena": "A_B Administración y Cajas Departamentales",
-      "propiedad_tabla_grande": "Princess Mundo Imperial",
-      "departamento_tabla_grande": "A&B ADMINISTRACIÓN"
-    },
-    {
-      "propiedad_tabla_pequena": "Princess Mundo Imperial",
-      "departamento_tabla_pequena": "A_B Cocinas",
-      "propiedad_tabla_grande": "Princess Mundo Imperial",
-      "departamento_tabla_grande": "A&B COCINAS"
-    },
-    {
-      "propiedad_tabla_pequena": "Princess Mundo Imperial",
-      "departamento_tabla_pequena": "A_B Stewards",
-      "propiedad_tabla_grande": "Princess Mundo Imperial",
-      "departamento_tabla_grande": "A&B STEWARDS"
     }
   ],
   "comparativo_completo": [
