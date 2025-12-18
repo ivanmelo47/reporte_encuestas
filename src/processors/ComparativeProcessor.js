@@ -47,8 +47,11 @@ class ComparativeProcessor {
 
         for (const [prop, depts] of Object.entries(smallIndex)) {
             const sheetRows = [];
-            const propStats = { questions: {}, depts: [] };
+            const propStats = { questions: {}, depts: [], deptScores: {} }; // Added deptScores
             const processedLargeDepts = new Set();
+            
+            // ... (lines 48-166 omitted) ...
+
             
             // Standard Property Mapping (Default)
             const propMapping = this.propertyMap.find(m => m.propiedad_tabla_pequena === prop);
@@ -186,6 +189,10 @@ class ComparativeProcessor {
                             // Dept Stats
                             deptStats.lSum += val;
                             deptStats.lCount++;
+
+                            // Matrix Score Capture
+                            if (!propStats.deptScores[qSmallCleaned]) propStats.deptScores[qSmallCleaned] = {};
+                            propStats.deptScores[qSmallCleaned][dept] = fmtScoreLarge;
                         }
                     }
                 }
@@ -244,10 +251,16 @@ class ComparativeProcessor {
 
                         for (const mapping of sortedMappings) {
                              // FILTER 0: Context Check
-                             // specific questions for other properties should not appear here.
-                             if (validSmallQuestions.size > 0 && !validSmallQuestions.has(mapping.pregunta_tabla_pequena)) {
-                                 continue;
-                             }
+                             // RELAXED: Allow all mapped questions to be checked against Large Data
+                             // BUT: Filter out questions explicitly naming OTHER properties.
+                             
+                             const qTextCheck = mapping.pregunta_tabla_pequena;
+                             // Heuristic: If question mentions a property name that is NOT the current property, skip it.
+                             if (qTextCheck.includes('Palacio') && !prop.includes('Palacio')) continue;
+                             if (qTextCheck.includes('Pierre') && !prop.includes('Pierre')) continue;
+                             if (qTextCheck.includes('Princess') && !prop.includes('Princess')) continue;
+                             if ((qTextCheck.includes('Arena') || qTextCheck.includes('Forum')) && !prop.includes('Arena')) continue;
+                             if (qTextCheck.includes('Servicios Corporativos') && !prop.includes('Servicios Corporativos')) continue;
 
                              const qLargeTextMap = mapping.pregunta_tabla_grande;
                              const qSmallTextMap = mapping.pregunta_tabla_pequena;
@@ -296,6 +309,10 @@ class ComparativeProcessor {
 
                                 deptStats.lSum += val;
                                 deptStats.lCount++;
+
+                                // Matrix Score Capture
+                                if (!propStats.deptScores[qSmallCleaned]) propStats.deptScores[qSmallCleaned] = {};
+                                propStats.deptScores[qSmallCleaned][lgDept] = fmtScoreLarge;
                             }
                         }
 
@@ -391,6 +408,50 @@ class ComparativeProcessor {
 
                 sheetRows.push(['', '', '', '', '']);
                 sheetRows.push(['', '', '', '', '']);
+
+                // --- 1.5. DETAILED DEPARTMENT MATRIX (USER REQUEST) ---
+                if (propStats.depts.length > 0) {
+                     sheetRows.push(['RESUMEN DETALLADO POR DEPARTAMENTO (MATRIZ)', '', '', '', '']);
+                     
+                     // Headers: Q columns + Dept Names + Promedio
+                     const matrixHeaders = ['Pregunta Tabla Grande', 'Pregunta', ...propStats.depts.map(d => d.name), 'Promedio'];
+                     sheetRows.push(matrixHeaders);
+
+                     for (const [key, stats] of summaryQEntries) {
+                         const mapping = this.comparativeMap.find(m => this._cleanQuestion(m.pregunta_tabla_pequena) === key);
+                         const qSmallText = mapping ? mapping.pregunta_tabla_pequena : key;
+                         const qLargeText = mapping ? mapping.pregunta_tabla_grande : '---';
+                         
+                         const row = [qLargeText, qSmallText];
+                         
+                         let rowSum = 0;
+                         let rowCount = 0;
+
+                         propStats.depts.forEach(d => {
+                             let val = '';
+                             if (propStats.deptScores[key] && propStats.deptScores[key][d.name]) {
+                                 val = propStats.deptScores[key][d.name];
+                                 
+                                 // Accumulate for Row Average
+                                 const numVal = parseFloat(val);
+                                 if (!isNaN(numVal)) {
+                                     rowSum += numVal;
+                                     rowCount++;
+                                 }
+                             }
+                             row.push(val);
+                         });
+                         
+                         // Calculate Row Average
+                         const rowAvg = rowCount > 0 ? (rowSum / rowCount).toFixed(2) + '%' : 'N/A';
+                         row.push(rowAvg);
+                         
+                         sheetRows.push(row);
+                     }
+                     
+                     sheetRows.push(['', '', '', '', '']);
+                     sheetRows.push(['', '', '', '', '']);
+                }
             }
 
             // 2. General Departments Table
@@ -477,6 +538,69 @@ class ComparativeProcessor {
              globalRows.push([qLargeText, qSmallText, fmtL]);
         }
         
+        // --- COMPARATIVO POR PROPIEDAD (MATRIZ GLOBAL) ---
+        if (allPropertySummaries.length > 0) {
+            globalRows.push(['', '', '']);
+            globalRows.push(['', '', '']);
+            globalRows.push(['COMPARATIVO POR PROPIEDAD (MATRIZ)', '', '']);
+            
+            // 1. Identify all Unique Properties
+            // Normalize names if needed, but let's use the ones in allPropertySummaries
+            const propNames = allPropertySummaries.map(p => p.propName);
+            
+            // 2. Build Lookup Map used for Matrix: Map<LargeQ, Map<PropName, Score>>
+            // Actually: Map<PropName, Map<LargeQ, Score>> is easier to build first
+            const propScoresMap = {};
+            
+            allPropertySummaries.forEach(p => {
+                const map = {};
+                p.rows.forEach(r => {
+                    // r = [LargeQ, SmallQ, Score]
+                    const lq = r[0];
+                    const score = r[2];
+                    map[lq] = score; // Key by LargeQ Text (assuming unique per prop)
+                });
+                propScoresMap[p.propName] = map;
+            });
+            
+            // 3. Generate Headers
+            const matrixHeaders = ['Pregunta Tabla Grande', 'Pregunta', ...propNames];
+            globalRows.push(matrixHeaders);
+            
+            // 4. Generate Matrix Rows
+            for (const [key, stats] of globalEntries) {
+                 // Find mapping by LARGE Question Key
+                 const mapping = this.comparativeMap.find(m => this._cleanQuestion(m.pregunta_tabla_grande) === key);
+                 
+                 let qSmallText = mapping ? mapping.pregunta_tabla_pequena : key;
+                 const qLargeText = mapping ? mapping.pregunta_tabla_grande : '---';
+
+                 // GENERALIZE Small Question (Reuse logic)
+                 qSmallText = qSmallText
+                    .replace(/Palacio MI/gi, "Mundo Imperial")
+                    .replace(/(Palacio|Pierre|Princess|Arena GNP|Forum|Dirección General|Servicios Corporativos|Servicios Arena GNP|Servicios Coporativos).*?Mundo Imperial/gi, "Mundo Imperial")
+                    .replace(/ \/ Forum Mundo Imperial/gi, "");
+
+                 const row = [qLargeText, qSmallText];
+                 let hasData = false;
+
+                 propNames.forEach(pName => {
+                     let val = 'N/A';
+                     const pMap = propScoresMap[pName];
+                     if (pMap && pMap[qLargeText]) {
+                         val = pMap[qLargeText];
+                     }
+                     row.push(val);
+                     if (val !== 'N/A') hasData = true;
+                 });
+                 
+                 // Only add if at least one property has data
+                 if (hasData) {
+                     globalRows.push(row);
+                 }
+            }
+        }
+
         // Append Individual Property Summaries
         if (allPropertySummaries.length > 0) {
             globalRows.push(['', '', '']);
